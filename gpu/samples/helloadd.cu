@@ -11,11 +11,20 @@
 		cudaMalloc( (void**)&dev_c, size );
 		cudaMemcpy( dev_a, &a, size, cudaMemcpyHostToDevice );
 		cudaMemcpy( dev_b, &b, size, cudaMemcpyHostToDevice );
+		cudaEvent_t start, stop;
+		cudaEventCreate(&start);
+		cudaEventCreate(&stop);
+		cudaEventRecord(start, 0);
+		
 		add<<< 1, 1 >>>( dev_a, dev_b, dev_c );
-		cudaMemcpy( &c, dev_c, size, cudaMemcpyDeviceToHost );
+		cudaEventRecord(stop, 0);
+cudaMemcpy( &c, dev_c, size, cudaMemcpyDeviceToHost );
+		cudaEventSynchronize(stop);
 		cudaFree( dev_a );
 		cudaFree( dev_b );
 		cudaFree( dev_c );
-		printf("Result %d\n",c);
+		float time;
+		cudaEventElapsedTime(&time, start, stop);
+		printf("Result %d Time %f \n",time,c);
 		return 0;
 	}

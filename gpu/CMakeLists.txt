@@ -1,0 +1,5 @@
+find_package(CUDA QUIET REQUIRED)
+include_directories(.)
+add_definitions(--std=c++11)
+add_subdirectory(samples)
+add_subdirectory(exercises_sol)

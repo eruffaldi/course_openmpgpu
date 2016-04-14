@@ -8,18 +8,7 @@
 #endif()
 
 add_definitions(--std=c++11 -fopenmp)
+include_directories(.)
 link_libraries(gomp)
-
-add_executable(parsin parsin.cpp)
-
-add_executable(task1 task1.cpp)
-
-add_executable(parnum parnum.cpp)
-
-add_executable(parsingle parsingle.cpp)
-
-add_executable(fib fib.cpp)
-
-add_executable(mandel mandel_solved.cpp)
-
-add_executable(fib_oracle fib_oracle.cpp)
+add_subdirectory(samples)
+add_subdirectory(exercises_sol)
