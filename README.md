@@ -9,13 +9,4 @@ cmake -DCMAKE_C_COMPILER=/opt/local/bin/gcc-mp-4.9 -DCMAKE_CXX_COMPILER=/opt/loc
 
 For CUDA verify requirements on NVidia CUDA Toolkit. Tested with CUDA 7.5
 
-##
-Exercise Stubs for Lecture 2:
-- fib_stub.cpp
-- mandel_stub.cpp
-
-
-#OSX Build
-Using MacPort
-
-cmake -DCMAKE_C_COMPILER=/opt/local/bin/gcc-mp-4.9 -DCMAKE_CXX_COMPILER=/opt/local/bin/g++-mp-4.9 ..
+Remember to use CMAKE_BUILD_TYPE=Release to make optimized builds
