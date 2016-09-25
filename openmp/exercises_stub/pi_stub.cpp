@@ -1,4 +1,6 @@
 /*
+ * Emanuele Ruffaldi 2016
+ *
  * It is known that the following integral has result pi
  *
  * integral[0,1, 4/(1+x*x)] = 4(atan(1)-atan(0)) = pi
