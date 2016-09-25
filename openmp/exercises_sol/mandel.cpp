@@ -5,6 +5,33 @@
 #include "omp.h"
 #include <vector>
 
+/*	
+	#pragma omp parallel for shared(image) firstprivate(h,w) schedule(runtime) shared(ww)
+	Equivalent to: note default(shared) means &
+		[&,h,w] (int i, int j) 
+		{
+			int k = mandel(i*((pmax-pmin)/h)+pmin,j*((qmax-qmin)/w)+qmin, maxv, maxk);
+			image[i*w+j] = k >= maxk ? 0 : k;
+			image2[i*w+j] = omp_get_thread_num()*256/n;
+		}
+
+	int qq = 20;
+	#pragma omp parallel for shared(image) firstprivate(h,w) schedule(runtime) shared(ww) private(qq)
+		[&,h,w] (int i, int j) 
+		{
+			int qq; // ADDED here
+			int k = mandel(i*((pmax-pmin)/h)+pmin,j*((qmax-qmin)/w)+qmin, maxv, maxk);
+			image[i*w+j] = k >= maxk ? 0 : k;
+			image2[i*w+j] = omp_get_thread_num()*256/n;
+		}
+ */
+struct W
+{
+	W(int k) { k_ = k; }
+	int k_;
+	W(const W & c) = delete;
+};
+
 int mandel(double p, double q, double maxv, int maxk)
 {
 	double x0 = p;
@@ -66,7 +93,9 @@ int main(int argc, char const *argv[])
 	printf("only row testing using runtime (OMP_SCHEDULE) environment variable\n");
 	{
 	double t0 = omp_get_wtime();
-	#pragma omp parallel for shared(image) firstprivate(h,w) schedule(runtime)
+	W ww(10);
+	// NOTE: cannot use nor private or firstprivate for ww
+	#pragma omp parallel for shared(image) firstprivate(h,w) schedule(runtime) shared(ww)
 	for(int i = 0; i < h; i++)
 		for(int j = 0; j < w; j++)
 		{

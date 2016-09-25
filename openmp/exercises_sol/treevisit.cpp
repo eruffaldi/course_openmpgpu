@@ -86,14 +86,14 @@ void visit_dfs_pre_rec_omp(Node *p)
 		visit_dfs_pre_rec(c);
 }
 
-void visit_any_rec_omp(Node *p)
+void visit_any_rec_omp(Node *p, int level)
 {
 	if(!p)
 		return;
 	for(auto & c : p->children)
 	{
-		#pragma omp task 
-		visit_dfs_pre_rec(c);
+		#pragma omp task if (level < 5)
+		visit_dfs_pre_rec(c,level+1);
 	}
 	#pragma omp taskwait
 	process(p);
@@ -105,7 +105,7 @@ int myvisit(Node * p)
 	{
 		#pragma omp single
 		{
-			visit_any_rec_omp(p);
+			visit_any_rec_omp(p,0);
 		}
 	}
 }
