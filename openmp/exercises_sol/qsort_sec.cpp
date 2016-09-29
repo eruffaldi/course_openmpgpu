@@ -71,18 +71,19 @@ int main(int argc, char * argv[])
 	//std::sort(q0.begin(),q0.end());
 	//std::cout << "regular sort gives " << check(q0.begin(),q0.end()) << std::endl;
 	omp_set_dynamic(1);
-	double t0,t1;
- 	t0 = omp_get_wtime();
+	double t0,t1,t00;
+ 	t00 = omp_get_wtime();
 	#pragma omp parallel
 	{
 		#pragma omp single
 		{
+		 	t0 = omp_get_wtime();
 			bb = q.begin();
 			std::cout << "starting with " << omp_get_num_threads() << std::endl;
 			qsort1(q.begin(),q.end());
 		}
 	}
  	t1 = omp_get_wtime();
-	std::cout << "parallel sort gives " << check(q.begin(),q.end()) << " duration " << t1-t0 << std::endl;
+	std::cout << "parallel sort gives " << check(q.begin(),q.end()) << " duration " << t1-t0 << "overhead " << t0-t00 << std::endl;
 	return 0;
 }
