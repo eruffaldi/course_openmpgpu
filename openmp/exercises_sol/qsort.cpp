@@ -60,7 +60,9 @@ int main(int argc, char * argv[])
 	std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> dis(1, 100);
-	std::vector<int> q(10000000);
+	std::vector<int> q(argc == 1 ? 10000000 : atoi(argv[1]));
+
+	std::cout << "problem size is " << q.size() << std::endl;
 
     for(int i = 0; i < q.size(); i++)
     	q[i] = dis(gen);
@@ -74,14 +76,14 @@ int main(int argc, char * argv[])
 	{
 		#pragma omp single
 		{
-			t0 = omp_get_wtime();
-			bb = q.begin();
 			std::cout << "starting with " << omp_get_num_threads() << std::endl;
+			bb = q.begin();
+			t0 = omp_get_wtime();
 			qsort1(q.begin(),q.end());
 		}
 		#pragma omp barrier
 	}
 	t1 = omp_get_wtime();
-	std::cout << "parallel sort gives " << check(q.begin(),q.end()) << " duration " << t1-t0 << "overhead " << t0-t00 << std::endl;
+	std::cout << "parallel sort gives " << check(q.begin(),q.end()) << " total " << t1-t00 << " = net " << t1-t0 << " + setup " << t0-t00 << std::endl;
 	return 0;
 }
