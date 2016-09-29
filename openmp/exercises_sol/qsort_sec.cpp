@@ -71,6 +71,8 @@ int main(int argc, char * argv[])
 	//std::sort(q0.begin(),q0.end());
 	//std::cout << "regular sort gives " << check(q0.begin(),q0.end()) << std::endl;
 	omp_set_dynamic(1);
+	double t0,t1;
+ 	t0 = omp_get_wtime();
 	#pragma omp parallel
 	{
 		#pragma omp single
@@ -80,6 +82,7 @@ int main(int argc, char * argv[])
 			qsort1(q.begin(),q.end());
 		}
 	}
-	std::cout << "parallel sort gives " << check(q.begin(),q.end()) << std::endl;
+ 	t1 = omp_get_wtime();
+	std::cout << "parallel sort gives " << check(q.begin(),q.end()) << " duration " << t1-t0 << std::endl;
 	return 0;
 }
