@@ -76,10 +76,15 @@ int main(int argc, char * argv[])
  	omp_set_dynamic(1); // default dynamic is impl specific
 	double t0,t1,t00;
  	t00 = omp_get_wtime();
-	std::cout << "starting with " << omp_get_num_threads() << std::endl;
 	bb = q.begin();
- 	t0 = omp_get_wtime();
-	qsort1(q.begin(),q.end());
+ 	#pragma omp parallel
+ 	{
+ 		#pragma omp single
+ 		{
+		 	t0 = omp_get_wtime();
+	 		qsort1(q.begin(),q.end());
+ 		}	
+ 	}
  	t1 = omp_get_wtime();
 	std::cout << "parallel sort gives " << check(q.begin(),q.end()) << " total " << t1-t00 << " = net " << t1-t0 << " + setup " << t0-t00 << std::endl;
 	return 0;
