@@ -12,6 +12,7 @@
 #include <list>
 #include <random>
 #include <algorithm>
+#include "qsort_common.h"
 
 
 std::vector<int>::iterator bb; // hack for diagnostics
@@ -23,7 +24,7 @@ void qsort1(I b, I e)
 {
 	if(b == e)
 		return;
-	//std::cout << "omp_get_thread_num " << omp_get_thread_num() << " " << (b-bb) << "/" << (e-bb) << std::endl;
+	qsortstat(b,e,bb);
 	auto d = std::distance(b,e);
 	auto p = *std::next(b, d/2);
 	using W = decltype(p);
@@ -32,12 +33,17 @@ void qsort1(I b, I e)
 	//C++14 auto mid2 = std::partition(mid1,e,[p] (const auto & em) { return !(p < em); });
 	auto mid1 = std::partition(b,e,[p] (const W & em) { return em < p; });
 	auto mid2 = std::partition(mid1,e,[p] (const W & em) { return !(p < em); });
-	#pragma omp task if (d > 20) untied
-	{ 	
+
+	#pragma omp task if (d > 20)
+	{
 		qsort1(b,mid1);
 	}
-	// continue in this (tail parallelism)
-	qsort1(mid2,e);
+
+	// if we omit the omp task the current task will continue in qsort1. 
+	#pragma omp task
+	{
+		qsort1(mid2,e);
+	}
 }
 
 
@@ -53,6 +59,12 @@ int main(int argc, char * argv[])
     for(int i = 0; i < q.size(); i++)
     	q[i] = dis(gen);
 
+    if(getenv("DEBUG") != 0)
+    	qsortstat_debug(1);
+
+ 	omp_set_nested(1);
+ 	omp_set_dynamic(1); // default dynamic is impl specific
+
 	//std::vector<int> q0 = q;
 	//std::sort(q0.begin(),q0.end());
 	//std::cout << "regular sort gives " << check(q0.begin(),q0.end()) << std::endl;
@@ -62,12 +74,10 @@ int main(int argc, char * argv[])
 	{
 		#pragma omp single
 		{
-			std::cout << "starting with " << omp_get_num_threads() << std::endl;
 			bb = q.begin();
 			t0 = omp_get_wtime();
 			qsort1(q.begin(),q.end());
 		}
-		#pragma omp barrier
 	}
 	t1 = omp_get_wtime();
 	std::cout << "parallel sort gives " << is_sorted(q.begin(),q.end()) << " total " << t1-t00 << " = net " << t1-t0 << " + setup " << t0-t00 << std::endl;

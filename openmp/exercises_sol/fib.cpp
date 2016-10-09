@@ -20,9 +20,15 @@ int main(int argc, char const *argv[])
 {
 	int n = argc == 1 ? 10 : atoi(argv[1]);
 
-	auto before = std::chrono::high_resolution_clock::now();
-	std::cout << "doing " << n << " " << fib(n) << std::endl;
-	auto after = std::chrono::high_resolution_clock::now();
-	std::cout << "elapsed us: " << (after-before).count() << std::endl;
+	#pragma omp paralell
+	{
+		#pragma omp single
+		{
+			auto before = std::chrono::high_resolution_clock::now();
+			std::cout << "doing " << n << " " << fib(n) << std::endl;
+			auto after = std::chrono::high_resolution_clock::now();
+			std::cout << "elapsed us: " << (after-before).count() << std::endl;
+		}
+	}
 	return 0;
 }

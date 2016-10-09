@@ -12,6 +12,7 @@
 #include <list>
 #include <random>
 #include <algorithm>
+#include "qsort_common.h"
 
 // check lexicographic ordering
 template <class I>
@@ -37,7 +38,7 @@ void qsort1(I b, I e)
 {
 	if(b == e)
 		return;
-	//std::cout << "omp_get_thread_num " << omp_get_thread_num() << " " << (b-bb) << "/" << (e-bb) << std::endl;
+	qsortstat(b,e,bb);
 	auto d = std::distance(b,e);
 	auto p = *std::next(b, d/2);
 	using W = decltype(p);
@@ -46,14 +47,13 @@ void qsort1(I b, I e)
 	//C++14 auto mid2 = std::partition(mid1,e,[p] (const auto & em) { return !(p < em); });
 	auto mid1 = std::partition(b,e,[p] (const W & em) { return em < p; });
 	auto mid2 = std::partition(mid1,e,[p] (const W & em) { return !(p < em); });
-	#pragma omp parallel if (d > 20)
+	#pragma omp parallel sections
 	{
-		#pragma omp single
-		{
-			qsort1(b,mid1);
-		}
+		#pragma omp section
+		qsort1(b,mid1);
+		#pragma omp section
+		qsort1(mid2,e);
 	}
-	qsort1(mid2,e);
 }
 
 
@@ -68,22 +68,20 @@ int main(int argc, char * argv[])
     for(int i = 0; i < q.size(); i++)
     	q[i] = dis(gen);
 
+    if(getenv("DEBUG") != 0)
+    	qsortstat_debug(1);
+
 	//std::vector<int> q0 = q;
 	//std::sort(q0.begin(),q0.end());
 	//std::cout << "regular sort gives " << check(q0.begin(),q0.end()) << std::endl;
-	omp_set_dynamic(1);
 	double t0,t1,t00;
+ 	omp_set_nested(1);
+ 	omp_set_dynamic(1); // default dynamic is impl specific
  	t00 = omp_get_wtime();
-	#pragma omp parallel
-	{
-		#pragma omp single
-		{
-			std::cout << "starting with " << omp_get_num_threads() << std::endl;
-			bb = q.begin();
-		 	t0 = omp_get_wtime();
-			qsort1(q.begin(),q.end());
-		}
-	}
+	bb = q.begin();
+ 	t0 = omp_get_wtime();
+	qsort1(q.begin(),q.end());
+
  	t1 = omp_get_wtime();
 	std::cout << "parallel sort gives " << check(q.begin(),q.end()) << " total " << t1-t00 << " = net " << t1-t0 << " + setup " << t0-t00 << std::endl;
 	return 0;
