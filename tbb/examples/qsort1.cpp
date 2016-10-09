@@ -82,7 +82,7 @@ int main(int argc, char * argv[])
 	//std::sort(q0.begin(),q0.end());
 	//std::cout << "regular sort gives " << check(q0.begin(),q0.end()) << std::endl;
  	auto t00 = tbb::tick_count::now();
-	int n = argc > 1 ? atoi(argv[1]) : tbb::task_scheduler_init::default_num_threads();
+	int n = argc > 2 ? atoi(argv[2]) : tbb::task_scheduler_init::default_num_threads();
 	tbb::task_scheduler_init init(n);
 	bb = q.begin();
  	auto t0 = tbb::tick_count::now();
