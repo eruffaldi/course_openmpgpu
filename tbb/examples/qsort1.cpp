@@ -49,18 +49,27 @@ void qsort1(I b, I e,bool top = false)
 	auto mid2 = std::partition(mid1,e,[p] (const W & em) { return !(p < em); });
 	decltype(mid1) ps[2] = { b,mid2};
 	decltype(mid1) pe[2] = { mid1,e};
-	tbb::task_group g;
-	g.run([&] { qsort1(ps[0],pe[0]); });
-	g.run([&] { qsort1(ps[1],pe[1]); });
-	g.wait();
+	if(d > 20)
+	{
+		tbb::task_group g;
+		g.run([&] { qsort1(ps[0],pe[0]); });
+		g.run([&] { qsort1(ps[1],pe[1]); });
+		g.wait();
+	}
+	else
+	{
+		qsort1(ps[0],pe[0]);
+		qsort1(ps[1],pe[1]);
+	}
 }
 
 
 int main(int argc, char * argv[])
 {
 
-	std::random_device rd;
-    std::mt19937 gen(rd());
+	std::random_device rd();
+	std::seed_seq seed1({1,2,3,4,5});
+    std::mt19937 gen(seed1); // rd());
     std::uniform_int_distribution<> dis(1, 100);
 	std::vector<int> q(argc == 1 ? 10000000 : atoi(argv[1]));
 
