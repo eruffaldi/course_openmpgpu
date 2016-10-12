@@ -40,7 +40,7 @@ void qsort1(I b, I e)
 	}
 
 	// if we omit the omp task the current task will continue in qsort1. 
-	#pragma omp task
+	// #pragma omp task if (d > 20)
 	{
 		qsort1(mid2,e);
 	}

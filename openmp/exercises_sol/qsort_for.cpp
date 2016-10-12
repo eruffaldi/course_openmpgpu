@@ -52,6 +52,7 @@ void qsort1(I b, I e)
 	#pragma omp parallel for if (d > 20)
 	for(int i = 0; i < 2; i++)
 		qsort1(ps[i],pe[i]);
+	// wait here implicit
 }
 
 

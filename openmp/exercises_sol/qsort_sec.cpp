@@ -47,13 +47,14 @@ void qsort1(I b, I e)
 	//C++14 auto mid2 = std::partition(mid1,e,[p] (const auto & em) { return !(p < em); });
 	auto mid1 = std::partition(b,e,[p] (const W & em) { return em < p; });
 	auto mid2 = std::partition(mid1,e,[p] (const W & em) { return !(p < em); });
-	#pragma omp parallel sections
+	#pragma omp parallel sections if (d > 20)
 	{
 		#pragma omp section
 		qsort1(b,mid1);
 		#pragma omp section
 		qsort1(mid2,e);
 	}
+	// wait here implicit
 }
 
 
