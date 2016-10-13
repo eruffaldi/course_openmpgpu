@@ -14,6 +14,11 @@
 #include <algorithm>
 #include <omp.h>
 
+int nitems = 10000000;
+int reclimit = 5000;
+int mergelimit = 10000;
+
+
 bool mergesortstat_debug(int what)
 {
 	static bool dodebug = false;
@@ -63,52 +68,121 @@ bool check(I b, I e)
 
 
 template <class T>
-void	merge(T *X, int n, T *tmp)
+void	mergesingle(T *X, T*Y, int nx, int ny, T *tmp)
 {
-int	i = 0;
-int	j = n/2;
-int	ti = 0;
+	int	i = 0;
+	int	j = 0;
+	int	ti = 0;
 
-	while (i<n/2 && j<n) {
-		if (X[i] < X[j]) {
+	while (i<nx && j<ny) {
+		if (X[i] < Y[j]) {
 			tmp[ti] = X[i];
 			ti++; i++;
 		}
 		else {
-			tmp[ti] = X[j];
+			tmp[ti] = Y[j];
 			ti++; j++;
 		}
 	}
 
-	while (i<n/2) { /* finish up lower half */
+	while (i<nx) { /* finish up lower half */
 		tmp[ti] = X[i];
 		ti++; i++;
 	}
-	while (j<n) { /* finish up upper half */
-		tmp[ti] = X[j];
+	while (j<ny) { /* finish up upper half */
+		tmp[ti] = Y[j];
 		ti++; j++;
 	}
-	memcpy(X, tmp, n*sizeof(T));
 }
+
+
+template <class T>
+void	merge(T *X, T * Y, int nx, int ny, T *tmp)
+{
+	if(nx+ny < mergelimit)
+	{
+		mergesingle(X,Y,nx,ny,tmp);		
+		return;
+	}
+
+	// X always bigger
+	if(nx < ny)
+	{
+		std::swap(X,Y);
+		std::swap(nx,ny);
+	}
+
+	int r = nx/2;
+	auto s = std::lower_bound(Y,Y+ny,X[r])-Y; // relative index
+
+	// special cases s==ny s==0
+	// merge X[0..r] with Y[0..s]
+	// add X[r] to out[t]
+	// merge X[r+1..] with Y[s..]
+
+	int t = r + s;
+	tmp[t] = X[r];
+
+	#pragma omp task 
+	{
+		merge(X,Y, r,s, tmp);
+	}
+	#pragma omp task 
+	{
+		merge(X+r+1,Y+s,nx-r-1,ny-s,tmp+t+1);
+	}
+	#pragma omp taskwait
+}
+
+
 
 template <class T>
 void	mergesort(T *X, int n, T *tmp)
 {
 	if (n < 2) return;
-	#pragma omp task if(n > 10)
+	if(n > reclimit)
+	{
+		// we move above if(n > reclimit)
+		#pragma omp task 
+		{
+			mergesort(X, n/2, tmp);
+		}
+		#pragma omp task
+		{
+			mergesort(X+(n/2), n-(n/2), tmp+n/2);
+		}
+		#pragma omp taskwait
+		merge(X, X+n/2, n/2,n-n/2, tmp);
+		memcpy(X,tmp,sizeof(T)*n);
+	}
+	else
 	{
 		mergesort(X, n/2, tmp);
+		mergesort(X+(n/2), n-(n/2), tmp+(n/2));
+		mergesingle(X, X+n/2, n/2,n-n/2, tmp);
+		memcpy(X,tmp,sizeof(T)*n);
 	}
-	#pragma omp task if(n > 10)
-	{
-		mergesort(X+(n/2), n-(n/2), tmp+n/2);
-	}
-	#pragma omp taskwait
-	merge(X, n, tmp);		
 }
 
 int main(int argc, char * argv[])
 {
+    if((argc == 2 && strcmp(argv[1],"--help") == 0) || argc > 5)
+	{
+		std::cerr << "test [cpus [nitems [reclimit [mergelimit]]]]";
+		return -1;
+	}
+	int ncpus = -1;
+	if(argc > 1)
+		ncpus = std::atoi(argv[1]);
+	if(argc > 2)
+		nitems = std::atoi(argv[2]);
+	if(argc > 3)
+		reclimit = std::atoi(argv[3]);
+	if(argc > 4)
+		mergelimit = std::atoi(argv[4]);
+
+	std::cout << "running with ncpus:" << ncpus << " nitems:" << nitems << " reclimit:" << reclimit << " mergelimit:" << mergelimit << std::endl;
+
 	std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> dis(1, 100);
@@ -118,6 +192,8 @@ int main(int argc, char * argv[])
     for(int i = 0; i < q.size(); i++)
     	q[i] = dis(gen);
 
+    if(ncpus != -1)
+    	omp_set_num_threads(ncpus);
     omp_set_dynamic(1);
 	double t0,t1,t00;
  	t00 = omp_get_wtime();
