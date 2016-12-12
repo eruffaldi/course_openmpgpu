@@ -9,6 +9,7 @@
 
 add_definitions(--std=c++11 -fopenmp)
 include_directories(.)
+include_directories(common)
 link_libraries(gomp)
 add_subdirectory(samples)
 add_subdirectory(exercises_stub)
