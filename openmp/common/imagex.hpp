@@ -166,6 +166,11 @@ struct Image
 
 		T & operator * () { return *data_; }
 
+		T & at(int j) 
+		{
+			return data_[j*inc1_ + (j/mod1_)*(inc2_-inc1_)];
+		}
+
 		any_iterator& operator ++() 
 		{
 			if(++step_ % mod1_ == 0)
@@ -253,24 +258,6 @@ Image<T,UT>::Image(int w, int h, const Image & other, int off): width_(w),height
 template <class T, class UT>
 Image<T,UT>::Image(int w, int h, Image & other, int off ): width_(w),height_(h),stride_(other.stride_+(other.width_-w)),data_(other.data_),offset_(off) {}
 
-#if 0
-template <class T, class UT>
-template <class R>
-RT Image<T,UT>::conv(const Image & other, T scaling)
-{
-	if(other.numel() != numel() || other.width() != width())
-		throw std::exception("size mismatch");
-	R out = 0; // TODO assignment for non scalar
-
-	// TODO: use zip iterator as in boost
-	// TODO: some STL?
-	auto Ait = byrow_iterator_pair();
-	auto Bit = other.byrow_iterator_pair();
-	for(; Ait.first != Ait.second;)
-		out += *Ait.first++ * *Bit.second++;
-	return out/scaling;
-}
-#endif
 
 template <class T, class UT>
 template <class Q>
@@ -293,30 +280,6 @@ void Image<T,UT>::operator= (std::initializer_list<Q> il)
 	}
 }
 
-#if 0
-template <class IM>
-void gaussianConvolve(IM src, IM & dst)
-{
-	int dw = dst.width();
-	int dh = dst.height();
-	IM mask(5,5);
-	mask = {1,4,6,4,1,  4,16,24,16,4,   6,24,36,24,6,   4,16,24,16,4,  1,4,6,4,1};
-	
-	// zero padding for policy around
-
-	#pragma omp parallel for collapse(2) shared(dst)
-	for(int i = 1; i < dh/2-1; i++)
-	{
-		for(int j = 1; j < dw/2-1; j++)
-		{
-			// (i,j) is the output computed over the full image
-			// min is: i=1      ==>   1*2-2 = 0 OK
-			// max is: i=dh/2-1 ==>   (dh/2*2-2-2)+2 = (dh-2-2+2) = dh-2 when EVEN
-			dst(i,j) = mask.corr(src.region(i*2-2,j*2-2,5,5)),256);
-		}
-	}
-}
-#endif
 
 template <class T>
 void imwrite(Image<T,T> src, const char * name, int c)

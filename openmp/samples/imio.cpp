@@ -25,6 +25,16 @@ int main(int argc, char const *argv[])
 	for(auto pit = test.byrow_iterator_pair(); pit.first != pit.second; ++pit.first)
 		std::cout << *pit.first << ' ';
 	std::cout << std::endl;
+
+	// example using random access. E.g. for using in parallel for
+	{
+	std::cout << "byrow random:";
+	auto pit = test.byrow_iterator_pair();
+	for(int i = 0; i < test.numel() ; ++i)
+		std::cout << pit.first.at(i) << ' ';
+	std::cout << std::endl;
+	}
+
 	std::cout << "bycol:";
 	for(auto pit = test.bycol_iterator_pair(); pit.first != pit.second; ++pit.first)
 		std::cout << *pit.first << ' ';
@@ -40,6 +50,15 @@ int main(int argc, char const *argv[])
 	for(auto pit = test.bycol_rev_iterator_pair(); pit.first != pit.second; ++pit.first)
 		std::cout << *pit.first << ' ';
 	std::cout << std::endl;
+
+	{
+	std::cout << "bycol_rev random:";
+	auto pit = test.bycol_rev_iterator_pair();
+	for(int i = 0; i < test.numel() ; ++i)
+		std::cout << pit.first.at(i) << ' ';
+	std::cout << std::endl;
+	}
+
 
 	test = {1,2,3,4,   5,6,7,8,   9,10,11,12};
 	std::cout << "after assign by row we have: byrow:";
